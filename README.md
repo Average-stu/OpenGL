@@ -1,12 +1,12 @@
 # Computer-Graphics
 
 ``````
-for config
+##for config
 
 $ bash required.sh
 
 
-For compilation and execution
+##For compilation and execution
 
 
 $ gcc 'file-name.c' -o 'file-name' -lGL -lglut -lGLU

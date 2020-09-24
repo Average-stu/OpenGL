@@ -29,7 +29,7 @@ Modeling, rendering, and interaction is very much a cooperative process between 
 OpenGL is a pure output-oriented modeling and rendering API. It has no facilities for creating and managing windows, obtaining runtime events, or any other such window system dependent operation. OpenGL implicitly assumes a window-system interface that fills these needs and invokes user-written event handlers as appropriate.
 
 
-**For config in linux machine**
+**For config on linux machine**
 ```
 $ bash required.sh
 ```

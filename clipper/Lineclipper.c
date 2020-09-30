@@ -160,7 +160,7 @@ void init()
 {
     glClearColor(0.8, 0, 0, 1);
     glMatrixMode(GL_PROJECTION);
-    gluOrtho2D(0, 500, 0, 500);
+    gluOrtho2D(-500, 500, -500, 500);
 }
 
 int main(int argc, char** argv)

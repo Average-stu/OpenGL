@@ -1,207 +1,360 @@
-#include <iostream.h>
-#include <conio.h>
-#include <graphics.h>
-int xl,yl,xh,yh,poly[100],n;
-void left_clip(){
-int temp[100],i,j=0,count=0,x1,y1,x2,y2;
-for(i=0;i<2*n;i+=2){
-x1 = poly[i];
-y1 = poly[i+1];
-x2 = poly[i+2];
-y2 = poly[i+3];
-if(x1<xl && x2<xl){
-//both points outside. Do not store any vertices
-}else if(x1>xl && x2>xl){
-//both points inside. Store second vertex
-temp[j] = x2;
-temp[j+1] = y2;
-j+=2;
-count++;
-}else if(x1<xl && x2>xl){
-//outside to inside. Store intersection n second vertex
-int x=xl;
-int y= y1 + (xl-x1)*(float)(y2-y1)/(x2-x1);
-temp[j]=x;
-temp[j+1]=y;
-temp[j+2]=x2;
-temp[j+3]=y2;
-j+=4;
-count+=2;
-}else{
-//inside to outside. Store intersection only
-int x=xl;
-int y= y1 + (xl-x1)*(float)(y2-y1)/(x2-x1);
-temp[j] = x;
-temp[j+1] = y;
-j+=2;
-count++;
-}
-}
-n=count;
-//store 1st vertex as last
-temp[j]=temp[0];
-temp[j+1]=temp[1];
+//Sutherland Hodgeman Polygon Clipping algorithm
 
-for(i=0;i<2*(n+1);i++)
-poly[i]=temp[i];
-}
-void right_clip(){
-int temp[100],i,j=0,count=0,x1,y1,x2,y2;
-for(i=0;i<2*n;i+=2){
-x1 = poly[i];
-y1 = poly[i+1];
-x2 = poly[i+2];
-y2 = poly[i+3];
-if(x1>xh && x2>xh){
-//both points outside. Do not store any vertices
-}else if(x1<xh && x2<xh){
-//both points inside. Store second vertex
-temp[j] = x2;
-temp[j+1] = y2;
-j+=2;
-count++;
-}else if(x1>xh && x2<xh){
-//outside to inside. Store intersection n second vertex
-int x=xh;
-int y= y1 + (xh-x1)*(float)(y2-y1)/(x2-x1);
-temp[j]=x;
-temp[j+1]=y;
-temp[j+2]=x2;
-temp[j+3]=y2;
-j+=4;
-count+=2;
-}else{
-//inside to outside. Store intersection only
-int x=xh;
-int y= y1 + (xh-x1)*(float)(y2-y1)/(x2-x1);
-temp[j] = x;
-temp[j+1] = y;
-j+=2;
-count++;
-}
-}
-n=count;
-//store 1st vertex as last
-temp[j]=temp[0];
-temp[j+1]=temp[1];
+#include<stdio.h>
+#include<GL/glut.h>
+#include<GL/freeglut.h>
+#include<math.h>
+#include<float.h>
 
-for(i=0;i<2*(n+1);i++)
-poly[i]=temp[i];
-}
-void bottom_clip(){
-int temp[100],i,j=0,count=0,x1,y1,x2,y2;
-for(i=0;i<2*n;i+=2){
-x1 = poly[i];
-y1 = poly[i+1];
-x2 = poly[i+2];
-y2 = poly[i+3];
-if(y1>yl && y2>yl){
-//both points outside. Do not store any vertices
-}else if(y1<yl && y2<yl){
-//both points inside. Store second vertex
-temp[j] = x2;
-temp[j+1] = y2;
-j+=2;
-count++;
-}else if(y1>yl && y2<yl){
-//outside to inside. Store intersection n second vertex
-int x= x1 + (yl-y1)/((float)(y2-y1)/(x2-x1));
-int y= yl;
-temp[j]=x;
-temp[j+1]=y;
-temp[j+2]=x2;
-temp[j+3]=y2;
-j+=4;
-count+=2;
-}else{
-//inside to outside. Store intersection only
-int x= x1 + (yl-y1)/((float)(y2-y1)/(x2-x1));
-int y= yl;
-temp[j] = x;
-temp[j+1] = y;
-j+=2;
-count++;
-}
-}
-n=count;
-//store 1st vertex as last
-temp[j]=temp[0];
-temp[j+1]=temp[1];
+#define MAX 10
 
-for(i=0;i<2*(n+1);i++)
-poly[i]=temp[i];
-}
-void top_clip(){
-int temp[100],i,j=0,count=0,x1,y1,x2,y2;
-for(i=0;i<2*n;i+=2){
-x1 = poly[i];
-y1 = poly[i+1];
-x2 = poly[i+2];
-y2 = poly[i+3];
-if(y1<yh && y2<yh){
-//both points outside. Do not store any vertices
-}else if(y1>yh && y2>yh){
-//both points inside. Store second vertex
-temp[j] = x2;
-temp[j+1] = y2;
-j+=2;
-count++;
-}else if(y1<yh && y2>yh){
-//outside to inside. Store intersection n second vertex
-int x= x1 + (yh-y1)/((float)(y2-y1)/(x2-x1));
-int y= yh;
-temp[j]=x;
-temp[j+1]=y;
-temp[j+2]=x2;
-temp[j+3]=y2;
-j+=4;
-count+=2;
-}else{
-//inside to outside. Store intersection only
-int x= x1 + (yh-y1)/((float)(y2-y1)/(x2-x1));
-int y= yh;
-temp[j] = x;
-temp[j+1] = y;
-j+=2;
-count++;
-}
-}
-n=count;
-//store 1st vertex as last
-temp[j]=temp[0];
-temp[j+1]=temp[1];
+int xmin, ymin, xmax, ymax; // Windows boundaries
+int n, result, points[MAX][2]; //Storing end-points of lines of polygon
+int aux[MAX][2]; //Auxillary array to store new end-points
 
-for(i=0;i<2*(n+1);i++)
-poly[i]=temp[i];
-}
-void main(){
-int gdriver = DETECT,gmode;
-initgraph(&gdriver,&gmode,”C:\TC\BGI”);
-int i;
-setcolor(BLUE);
-cout<<“Enter bottom left and top right co-ordinates of window: “;
-cin>>xl>>yl>>xh>>yh;
-rectangle(xl,yl,xh,yh);
-cout<<“Enter the no. of vertices: “;
-cin>>n;
-for(i=0;i<2*n;i+=2){
-cout<<“Enter co-ordinates of vertex “<<(i/2+1)<<“: “;
-cin>>poly[i]>>poly[i+1];
-}
-//store 1st vertex as last
-poly[2*n] = poly[0];
-poly[2*n+1] = poly[1];
-drawpoly(n+1,poly);
-getch();
+int leftClip(int total) 
+{
+	int x1, y1, x2, y2, iterator = 0, i;
+	float m;
+	for (i = 0; i < total; i++)
+	{
+		x1 = points[i][0];
+		y1 = points[i][1];
+		x2 = points[(i + 1) % total][0];
+		y2 = points[(i + 1) % total][1];
 
-left_clip();
-right_clip();
-bottom_clip();
-top_clip();
-cout<<“After clipping:”;
-setcolor(WHITE);
-drawpoly(n+1,poly);
+		if (x2 - x1)
+			m = (y2 - y1) * 1.0 / (x2 - x1);
+		else
+			m = FLT_MAX;
 
-getch();
-closegraph();
+		if (x1 < xmin && x2 < xmin)
+			continue;
+		if (x1 >= xmin && x2 >= xmin) 
+		{
+			aux[iterator][0] = x2;
+			aux[iterator++][1] = y2;
+			continue;
+		}
+		if (x1 >= xmin && x2 < xmin)
+		{
+			aux[iterator][0] = xmin;
+			aux[iterator++][1] = y1 + m * (xmin - x1);
+			continue;
+		}
+		if (x1 < xmin && x2 >= xmin)
+		{
+			aux[iterator][0] = xmin;
+			aux[iterator++][1] = y1 + m * (xmin - x1);
+			aux[iterator][0] = x2;
+			aux[iterator++][1] = y2;
+		}
+	}
+
+	for (i = 0; i < iterator; i++)
+	{
+		points[i][0] = aux[i][0];
+		points[i][1] = aux[i][1];
+		aux[i][0] = 0;
+		aux[i][1] = 0;
+	}
+
+	if (iterator < total)
+		while (i < total)
+		{
+			points[i][0] = 0;
+			points[i][1] = 0;
+			i++;
+		}
+
+	return iterator;
 }
+
+int topClip(int total) 
+{
+	int i, iterator = 0, x1, y1, x2, y2;
+	float m;
+	for (i = 0; i < total; i++) 
+	{
+		x1 = points[i][0];
+		y1 = points[i][1];
+		x2 = points[(i + 1) % total][0];
+		y2 = points[(i + 1) % total][1];
+		if (x2 - x1)
+			m = (y2 - y1) * 1.0 / (x2 - x1);
+		else
+			m = FLT_MAX;
+
+		if (y1 > ymax && y2 > ymax)
+			continue;
+		if (y1 <= ymax && y2 <= ymax) 
+		{
+			aux[iterator][0] = x2;
+			aux[iterator++][1] = y2;
+			continue;
+		}
+		if (y1 <= ymax && y2 > ymax) 
+		{
+			aux[iterator][0] = x1 + (ymax - y1) / m;
+			aux[iterator++][1] = ymax;
+			continue;
+		}
+		if (y1 > ymax && y2 <= ymax) 
+		{
+			aux[iterator][0] = x1 + (ymax - y1) / m;
+			aux[iterator++][1] = ymax;
+			aux[iterator][0] = x2;
+			aux[iterator++][1] = y2;
+		}
+	}
+
+	for (i = 0; i < iterator; i++) 
+	{
+		points[i][0] = aux[i][0];
+		points[i][1] = aux[i][1];
+		aux[i][0] = 0;
+		aux[i][1] = 0;
+	}
+
+	if (iterator < total)
+		while (i < total)
+		{
+			points[i][0] = 0;
+			points[i][1] = 0;
+			i++;
+		}
+
+	return iterator;
+}
+
+int rightClip(int total) 
+{
+	int i, iterator = 0, x1, y1, x2, y2;
+	float m;
+	for (i = 0; i < total; i++) 
+	{
+		x1 = points[i][0];
+		y1 = points[i][1];
+		x2 = points[(i + 1) % total][0];
+		y2 = points[(i + 1) % total][1];
+		if (x2 - x1)
+			m = (y2 - y1) * 1.0 / (x2 - x1);
+		else
+			m = FLT_MAX;
+
+		if (x1 > xmax && x2 > xmax)
+			continue;
+		if (x1 <= xmax && x2 <= xmax)
+		{
+			aux[iterator][0] = x2;
+			aux[iterator++][1] = y2;
+			continue;
+		}
+		if (x1 <= xmax && x2 > xmax) 
+		{
+			aux[iterator][0] = xmax;
+			aux[iterator++][1] = y1 + m * (xmax - x1);
+			continue;
+		}
+		if (x1 > xmax && x2 <= xmax) 
+		{
+			aux[iterator][0] = xmax;
+			aux[iterator++][1] = y1 + m * (xmax - x1);
+			aux[iterator][0] = x2;
+			aux[iterator++][1] = y2;
+		}
+	}
+
+	for (i = 0; i < iterator; i++) 
+	{
+		points[i][0] = aux[i][0];
+		points[i][1] = aux[i][1];
+		aux[i][0] = 0;
+		aux[i][1] = 0;
+	}
+
+	if (iterator < total)
+		while (i < total)
+		{
+			points[i][0] = 0;
+			points[i][1] = 0;
+			i++;
+		}
+
+	return iterator;
+}
+
+int bottomClip(int total)
+{
+	int i, iterator = 0, x1, y1, x2, y2;
+	float m;
+	for (i = 0; i < total; i++) 
+	{
+		x1 = points[i][0];
+		y1 = points[i][1];
+		x2 = points[(i + 1) % total][0];
+		y2 = points[(i + 1) % total][1];
+		if (x2 - x1)
+			m = (y2 - y1) * 1.0 / (x2 - x1);
+		else
+			m = FLT_MAX;
+
+		if (y1 < ymin && y2 < ymin)
+			continue;
+		if (y1 >= ymin && y2 >= ymin) 
+		{
+			aux[iterator][0] = x2;
+			aux[iterator++][1] = y2;
+			continue;
+		}
+		if (y1 >= ymin && y2 < ymin) 
+		{
+			aux[iterator][0] = x1 + (ymin - y1) / m;
+			aux[iterator++][1] = ymin;
+			continue;
+		}
+		if (y1 < ymin && y2 >= ymin) 
+		{
+			aux[iterator][0] = x1 + (ymin - y1) / m;
+			aux[iterator++][1] = ymin;
+			aux[iterator][0] = x2;
+			aux[iterator++][1] = y2;
+		}
+	}
+
+	for (i = 0; i < iterator; i++) 
+	{
+		points[i][0] = aux[i][0];
+		points[i][1] = aux[i][1];
+		aux[i][0] = 0;
+		aux[i][1] = 0;
+	}
+
+	if (iterator < total)
+		while (i < total)
+		{
+			points[i][0] = 0;
+			points[i][1] = 0;
+			i++;
+		}
+
+	return iterator;
+}
+
+void Keyboard(unsigned char key, int x, int y)
+{
+	if(key == 'c')
+  {
+    //Drawing again with clipped part
+    glClearColor(0.8, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    //Sutherland-Hodgeman Algorithm
+    result = leftClip(n);
+    result = topClip(result);
+    result = rightClip(result);
+    result = bottomClip(result);
+    	  
+    //Drawing window again
+    glColor3f(0, 1, 0);
+    glLineWidth(10);
+    glBegin(GL_LINE_LOOP);
+      glVertex2f(xmin, ymin);
+      glVertex2f(xmin, ymin);
+      glVertex2f(xmax, ymin);
+      glVertex2f(xmax, ymax);
+      glVertex2f(xmin, ymax);
+    glEnd();
+
+    //Drawing clipped polygon
+    glColor3f(0, 0, 1);
+    glLineWidth(10);
+    glBegin(GL_LINE_STRIP);
+      for(int i = 0; i < result; i++)
+        glVertex2d(points[i][0], points[i][1]);
+      glVertex2d(points[0][0], points[0][1]);
+    glEnd();
+
+    glFlush();
+  }
+}
+
+void display()
+{
+  //Drawing without clipping
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  //Drawing window
+  glColor3f(0, 1, 0);
+  glLineWidth(10);
+  glBegin(GL_LINE_LOOP);
+    glVertex2f(xmin, ymin);
+    glVertex2f(xmin, ymin);
+    glVertex2f(xmax, ymin);
+    glVertex2f(xmax, ymax);
+    glVertex2f(xmin, ymax);
+  glEnd();
+
+  //Drawing polygon
+  glColor3f(0, 0, 1);
+  glLineWidth(10);
+  glBegin(GL_LINE_STRIP);
+    for(int i = 0; i < n; i++)
+      glVertex2d(points[i][0], points[i][1]);
+	glVertex2d(points[0][0], points[0][1]);
+  glEnd();
+
+  glFlush();
+}
+
+void init()
+{
+    glClearColor(0.8, 0, 0, 1);
+    glMatrixMode(GL_PROJECTION);
+    gluOrtho2D(0, 500, 0, 500);
+}
+
+int main(int argc, char** argv)
+{
+  printf("Window size - 500x500 i.e. range of x and y is 0 -> 500\n");
+
+  printf("\nEnter window boundaries:-\n");
+  printf("Enter xmin: ");
+  scanf("%d", &xmin);
+  printf("Enter ymin: ");
+  scanf("%d", &ymin);
+  printf("Enter xmax: ");
+  scanf("%d", &xmax);
+  printf("Enter ymax: ");
+  scanf("%d", &ymax);
+
+  printf("\nEnter number of points: ");
+  scanf("%d", &n);
+
+  if(n < 3)
+  {
+    printf("Number of points should be equal to or greater than 3!\n");
+    exit(0);
+  }
+  else
+    printf("Enter points in clock-wise/anti-clock-wise order!\n");
+
+  for(int i = 0; i < n; i++)
+  {
+    printf("Enter point-%d: ", i+1);
+    scanf("%d %d", &points[i][0], &points[i][1]);
+  }
+
+  glutInit(&argc,argv);
+  glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+  glutInitWindowSize(500, 500);
+  glutCreateWindow("Sutherland Hodgeman Polygon Clipping");
+
+  init();
+  glutDisplayFunc(display);
+  glutKeyboardFunc(Keyboard);
+  glutMainLoop();
+
+  return 0;
+}
+
